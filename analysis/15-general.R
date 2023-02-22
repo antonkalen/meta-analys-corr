@@ -15,6 +15,7 @@ library(glue)
 library(ggplot2)
 library(clubSandwich)
 library(writexl)
+library(metaviz)
 
 source(here("R/descriptives.R"))
 source(here("R/pairwise_tests.R"))
@@ -79,14 +80,14 @@ nested_data <- clean_data |>
   nest_by(.data[[grouping]]) |> 
   filter(nrow(data) > 1) |> 
   mutate(
-    V = list(vcalc(vi = vi, cluster = id, nearpd=TRUE, data = data))
+    V = list(vcalc(vi = vi, cluster = id, nearpd = TRUE, data = data))
   )
 
 
 # Run analysis ------------------------------------------------------------
 
 # Set up moderator formula
-mod_formula <- if(length(mods) > 0) {
+mod_formula <- if (length(mods) > 0) {
   mod_string <- paste(mods, collapse = "+")
   as.formula(paste0("~ 0 + revised_general_factor:", mod_string))
 } else {
@@ -103,10 +104,10 @@ models <- nested_data |>
         mods = mod_formula,
         slab = study_name,
         data = data,
-        test= "t",
+        test = "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )
@@ -123,10 +124,10 @@ regtest_models <- nested_data |>
         mods = ~std_error,
         slab = study_name,
         data = data,
-        test= "t",
+        test = "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )
@@ -143,12 +144,12 @@ descs <- models |>
 coefs <- models |> 
   summarise(get_coefs_2(model))
 
-pairs <- if(length(mods) > 0) models |> summarise(pairwise_tests(model))
+pairs <- if (length(mods) > 0) models |> summarise(pairwise_tests(model))
 
 
 # Write excel file with all output ----------------------------------------
 
-tabs <- if(length(mods) > 0) {
+tabs <- if (length(mods) > 0) {
   list(descriptives = descs, coefficients = coefs, pairwise = pairs, eggers_test = regtest_coefs)
 } else {
   list(descriptives = descs, coefficients = coefs, eggers_test = regtest_coefs)
@@ -171,12 +172,16 @@ funnel_models <- nested_data |>
         random = ~ 1|id/es_id,
         slab = study_name,
         data = data,
-        test= "t",
+        test = "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )
 
-walk2(funnel_models$model, models[[grouping]], ~funnel(.x, main = .y))
+# NS
+viz_sunset(funnel_models$model[[1]])
+# NT
+viz_sunset(funnel_models$model[[2]])
+
