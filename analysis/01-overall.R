@@ -77,10 +77,19 @@ nested_data <- clean_data |>
     # length(unique(data[[mods]])) > 1
   ) |> 
   mutate(
-    V = list(vcalc(vi = vi, cluster = id, nearpd=TRUE, data = data))
+    V = list(vcalc(vi = vi, cluster = id, nearpd = TRUE, data = data))
   )
 
 # Run analysis ------------------------------------------------------------
+
+# Descriptives
+nr_studies <- clean_data |> 
+  group_by() |> 
+  summarise(
+    n_effect_sizes = n(),
+    k_studies = n_distinct(id),
+    .by = c({{grouping}}, {{mods}})
+  )
 
 # Set up moderator formula
 mod_formula <- if(length(mods) > 0) {
@@ -116,7 +125,7 @@ descs <- models |>
 coefs <- models |> 
   summarise(get_coefs(model, data))
 
-pairs <- if(length(mods) > 0) models |> summarise(pairwise_tests(model))
+pairs <- if (length(mods) > 0) models |> summarise(pairwise_tests(model))
 
 # Eggers test for funnel plot asymetry -----------------------------------
 
@@ -130,24 +139,35 @@ regtest_models <- nested_data |>
         mods = ~std_error,
         slab = study_name,
         data = data,
-        test= "t",
+        test = "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )
 
 regtest_coefs <- regtest_models |> 
-  summarise(get_coefs(model, data)) |> 
+  reframe(get_coefs(model, data)) |> 
   filter(term == "std_error")
 
 # Write excel file with all output ----------------------------------------
 
-tabs <- if(length(mods) > 0) {
-  list(descriptives = descs, coefficients = coefs, pairwise = pairs, eggers_test = regtest_coefs)
+tabs <- if (length(mods) > 0) {
+  list(
+    descriptives = descs, 
+    coefficients = coefs, 
+    pairwise = pairs, 
+    eggers_test = regtest_coefs,
+    nr_studies = nr_studies
+  )
 } else {
-  list(descriptives = descs, coefficients = coefs, eggers_test = regtest_coefs)
+  list(
+    descriptives = descs, 
+    coefficients = coefs, 
+    eggers_test = regtest_coefs,
+    nr_studies = nr_studies
+  )
   }
 
 write_xlsx(

@@ -86,6 +86,15 @@ nested_data <- clean_data |>
 
 # Run analysis ------------------------------------------------------------
 
+# descriptives
+nr_studies <- clean_data |> 
+  group_by() |> 
+  summarise(
+    n_effect_sizes = n(),
+    k_studies = n_distinct(id),
+    .by = c({{grouping}}, {{mods}})
+  )
+
 # Set up moderator formula
 mod_formula <- if(length(mods) > 0) {
   mod_string <- paste(mods, collapse = "+")
@@ -107,7 +116,7 @@ models <- nested_data |>
         test= "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )
@@ -115,15 +124,15 @@ models <- nested_data |>
 # Check results -----------------------------------------------------------
 
 descs <- models |> 
-  summarise(descriptives(model))
+  reframe(descriptives(model))
 
 coefs <- models |> 
-  summarise(quality_factor_comp(model))
+  reframe(quality_factor_comp(model))
 
 
 # Write excel file with all output ----------------------------------------
 
-tabs <- list(descriptives = descs, coefficients = coefs)
+tabs <- list(descriptives = descs, coefficients = coefs, nr_studies = nr_studies)
 
 write_xlsx(
   tabs,

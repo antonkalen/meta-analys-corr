@@ -86,6 +86,15 @@ nested_data <- clean_data |>
 
 # Run analysis ------------------------------------------------------------
 
+# descriptives
+nr_studies <- clean_data |> 
+  group_by() |> 
+  summarise(
+    n_effect_sizes = n(),
+    k_studies = n_distinct(id),
+    .by = c({{grouping}}, {{mods}})
+  )
+
 # Set up moderator formula
 mod_formula <- if (length(mods) > 0) {
   mod_string <- paste(mods, collapse = "+")
@@ -139,20 +148,20 @@ regtest_coefs <- regtest_models |>
 # Check results -----------------------------------------------------------
 
 descs <- models |> 
-  summarise(descriptives(model))
+  reframe(descriptives(model))
 
 coefs <- models |> 
-  summarise(get_coefs_2(model))
+  reframe(get_coefs_2(model))
 
-pairs <- if (length(mods) > 0) models |> summarise(pairwise_tests(model))
+pairs <- if (length(mods) > 0) models |> reframe(pairwise_tests(model))
 
 
 # Write excel file with all output ----------------------------------------
 
 tabs <- if (length(mods) > 0) {
-  list(descriptives = descs, coefficients = coefs, pairwise = pairs, eggers_test = regtest_coefs)
+  list(descriptives = descs, coefficients = coefs, pairwise = pairs, eggers_test = regtest_coefs, nr_studies = nr_studies)
 } else {
-  list(descriptives = descs, coefficients = coefs, eggers_test = regtest_coefs)
+  list(descriptives = descs, coefficients = coefs, eggers_test = regtest_coefs, nr_studies = nr_studies)
 }
 
 write_xlsx(
@@ -181,7 +190,27 @@ funnel_models <- nested_data |>
   )
 
 # NS
-viz_sunset(funnel_models$model[[1]])
+general_ns_fig <- viz_sunset(funnel_models$model[[1]]) 
+ggsave(
+  "general_NS.tiff",
+  plot = general_ns_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
 # NT
-viz_sunset(funnel_models$model[[2]])
+general_nt_fig <- viz_sunset(funnel_models$model[[2]])
+ggsave(
+  "general_NT.tiff",
+  plot = general_nt_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
 

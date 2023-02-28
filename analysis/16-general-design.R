@@ -78,14 +78,23 @@ nested_data <- clean_data |>
   nest_by(.data[[grouping]]) |> 
   filter(length(unique(data[[mods]])) > 1) |> 
   mutate(
-    V = list(vcalc(vi = vi, cluster = id, nearpd=TRUE, data = data))
+    V = list(vcalc(vi = vi, cluster = id, nearpd = TRUE, data = data))
   )
 
 
 # Run analysis ------------------------------------------------------------
 
+# descriptives
+nr_studies <- clean_data |> 
+  group_by() |> 
+  summarise(
+    n_effect_sizes = n(),
+    k_studies = n_distinct(id),
+    .by = c({{grouping}}, {{mods}})
+  )
+
 # Set up moderator formula
-mod_formula <- if(length(mods) > 0) {
+mod_formula <- if (length(mods) > 0) {
   mod_string <- paste(mods, collapse = "+")
   as.formula(paste0("~ 0 + revised_general_factor:", mod_string))
 } else {
@@ -102,10 +111,10 @@ models <- nested_data |>
         mods = mod_formula,
         slab = study_name,
         data = data,
-        test= "t",
+        test = "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )
@@ -113,21 +122,21 @@ models <- nested_data |>
 # Check results -----------------------------------------------------------
 
 descs <- models |> 
-  summarise(descriptives(model))
+  reframe(descriptives(model))
 
 coefs <- models |> 
-  summarise(get_coefs_2(model))
+  reframe(get_coefs_2(model))
 
-pairs <- if(length(mods) > 0) models |> 
-  summarise(alot_pairwise_tests(model))
+pairs <- if (length(mods) > 0) models |> 
+  reframe(alot_pairwise_tests(model))
 
 
 # Write excel file with all output ----------------------------------------
 
-tabs <- if(length(mods) > 0) {
-  list(descriptives = descs, coefficients = coefs, pairwise = pairs)
+tabs <- if (length(mods) > 0) {
+  list(descriptives = descs, coefficients = coefs, pairwise = pairs, nr_studies = nr_studies)
 } else {
-  list(descriptives = descs, coefficients = coefs)
+  list(descriptives = descs, coefficients = coefs, nr_studies = nr_studies)
   }
 
 write_xlsx(
