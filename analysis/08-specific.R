@@ -95,7 +95,7 @@ nr_studies <- clean_data |>
   summarise(
     n_effect_sizes = n(),
     k_studies = n_distinct(id),
-    .by = c({{grouping}}, {{mods}})
+    .by = c({{grouping}}, specific_factor, {{mods}})
   )
 
 # Set up moderator formula
@@ -136,10 +136,10 @@ regtest_models <- nested_data |>
         mods = ~std_error,
         slab = study_name,
         data = data,
-        test= "t",
+        test = "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )

@@ -91,7 +91,7 @@ nr_studies <- clean_data |>
   summarise(
     n_effect_sizes = n(),
     k_studies = n_distinct(id),
-    .by = c({{grouping}}, {{mods}})
+    .by = c({{grouping}}, revised_general_factor, {{mods}})
   )
 
 # Set up moderator formula
