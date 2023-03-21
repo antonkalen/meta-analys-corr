@@ -25,7 +25,7 @@ source(here("R/get_coefs.R"))
 # In this part, we set all the parameters that we might be interested in changing
 
 # Data file name (needs quotes around name, and file ending)
-data_file <- "Meta-analysis spreadsheet specific factors to AI 221202DB.xlsx"
+data_file <- "Meta-analysis spreadsheet specific factors to AI 221202DBA.xlsx"
 
 # Here you set the name for the tables and figures produced (without file ending)
 files_out_name <- "09-specific-design"
@@ -128,13 +128,14 @@ descs <- models |>
 coefs <- models |> 
   reframe(get_coefs_2(model))
 
-pairs <- if(length(mods) > 0) models |> 
+pairs <- if (length(mods) > 0) models |> 
+  filter(outcome != "NS") |> 
   reframe(alot_pairwise_tests(model))
 
 
 # Write excel file with all output ----------------------------------------
 
-tabs <- if(length(mods) > 0) {
+tabs <- if (length(mods) > 0) {
   list(descriptives = descs, coefficients = coefs, pairwise = pairs, nr_studies = nr_studies)
 } else {
   list(descriptives = descs, coefficients = coefs, nr_studies = nr_studies)

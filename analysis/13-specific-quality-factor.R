@@ -26,7 +26,7 @@ source(here("R/quality_factor_comp.R"))
 # In this part, we set all the parameters that we might be interested in changing
 
 # Data file name (needs quotes around name, and file ending)
-data_file <- "Meta-analysis spreadsheet specific factors to AI 221202DB.xlsx"
+data_file <- "Meta-analysis spreadsheet specific factors to AI 221202DBA.xlsx"
 
 # Here you set the name for the tables and figures produced (without file ending)
 files_out_name <- "13-specific-quality-factor"

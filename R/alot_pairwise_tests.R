@@ -4,6 +4,7 @@ alot_pairwise_tests <- function(x) {
   coef_names <- sub(":.*", ":", coef_names)
   coef_names <- coef_names[duplicated(coef_names)]
   coef_names <- unique(coef_names)
+
   
   df <- coef_names |> 
     purrr::map(

@@ -15,6 +15,7 @@ library(glue)
 library(ggplot2)
 library(clubSandwich)
 library(writexl)
+library(metaviz)
 
 source(here("R/descriptives.R"))
 source(here("R/pairwise_tests.R"))
@@ -24,7 +25,7 @@ source(here("R/get_coefs.R"))
 # In this part, we set all the parameters that we might be interested in changing
 
 # Data file name (needs quotes around name, and file ending)
-data_file <- "Meta-analysis spreadsheet specific factors to AI 221202DB.xlsx"
+data_file <- "Meta-analysis spreadsheet specific factors to AI 221202DBA.xlsx"
 
 # Here you set the name for the tables and figures produced (without file ending)
 files_out_name <- "08-specific"
@@ -83,7 +84,7 @@ nested_data <- clean_data |>
     nrow(data) > 1
   ) |> 
   mutate(
-    V = list(vcalc(vi = vi, cluster = id, nearpd=TRUE, data = data))
+    V = list(vcalc(vi = vi, cluster = id, nearpd = TRUE, data = data))
   )
 
 
@@ -99,7 +100,7 @@ nr_studies <- clean_data |>
   )
 
 # Set up moderator formula
-mod_formula <- if(length(mods) > 0) {
+mod_formula <- if (length(mods) > 0) {
   mod_string <- paste(mods, collapse = "+")
   as.formula(paste0("~ 0 + specific_factor:", mod_string))
 } else {
@@ -116,10 +117,10 @@ models <- nested_data |>
         mods = mod_formula,
         slab = study_name,
         data = data,
-        test= "t",
+        test = "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )
@@ -145,8 +146,8 @@ regtest_models <- nested_data |>
   )
 
 regtest_coefs <- regtest_models |> 
-  summarise(get_coefs(model, data)) |> 
-  filter(term == "std_error")
+  reframe(get_coefs_2(model)) |> 
+  filter(Coef == "std_error")
 
 # Check results -----------------------------------------------------------
 
@@ -156,27 +157,27 @@ descs <- models |>
 coefs <- models |> 
   reframe(get_coefs_2(model))
 
-pairs <- if(length(mods) > 0) models |> reframe(pairwise_tests(model))
+pairs <- if (length(mods) > 0) models |> reframe(pairwise_tests(model))
 
 
 # Write excel file with all output ----------------------------------------
 
-tabs <- if(length(mods) > 0) {
+tabs <- if (length(mods) > 0) {
   list(
     descriptives = descs, 
-       coefficients = coefs, 
-       pairwise = pairs, 
-       eggers_test = regtest_coefs,
+    coefficients = coefs, 
+    pairwise = pairs, 
+    eggers_test = regtest_coefs,
     nr_studies = nr_studies
-    )
+  )
 } else {
   list(
     descriptives = descs, 
-       coefficients = coefs, 
-       eggers_test = regtest_coefs,
-      nr_studies = nr_studies
-    )
-  }
+    coefficients = coefs, 
+    eggers_test = regtest_coefs,
+    nr_studies = nr_studies
+  )
+}
 
 write_xlsx(
   tabs,
@@ -195,12 +196,114 @@ funnel_models <- nested_data |>
         random = ~ 1|id/es_id,
         slab = study_name,
         data = data,
-        test= "t",
+        test = "t",
         dfs = "contain",
         level = ci,
-        control=list(iter.max=1000, rel.tol=1e-8)
+        control = list(iter.max = 1000, rel.tol = 1e-8)
       )
     )
   )
 
-walk2(funnel_models$model, models[[grouping]], ~funnel(.x, main = .y))
+## AS ----
+specific_as_fig <- viz_sunset(funnel_models$model[[1]]) 
+ggsave(
+  "specific_as.tiff",
+  plot = specific_as_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
+
+## At ----
+specific_at_fig <- viz_sunset(funnel_models$model[[2]]) 
+ggsave(
+  "specific_at.tiff",
+  plot = specific_at_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
+
+## cs ----
+specific_cs_fig <- viz_sunset(funnel_models$model[[3]]) 
+ggsave(
+  "specific_cs.tiff",
+  plot = specific_cs_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
+
+## ct ----
+specific_ct_fig <- viz_sunset(funnel_models$model[[4]]) 
+ggsave(
+  "specific_ct.tiff",
+  plot = specific_ct_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
+
+## ns ----
+specific_ns_fig <- viz_sunset(funnel_models$model[[5]]) 
+ggsave(
+  "specific_ns.tiff",
+  plot = specific_ns_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
+
+## nt ----
+specific_nt_fig <- viz_sunset(funnel_models$model[[6]]) 
+ggsave(
+  "specific_nt.tiff",
+  plot = specific_nt_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
+
+## rs ----
+specific_rs_fig <- viz_sunset(funnel_models$model[[7]]) 
+ggsave(
+  "specific_rs.tiff",
+  plot = specific_rs_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
+
+## rt ----
+specific_rt_fig <- viz_sunset(funnel_models$model[[8]]) 
+ggsave(
+  "specific_rt.tiff",
+  plot = specific_rt_fig,
+  path = "figs",
+  width = 14,
+  height = 14,
+  units = "cm",
+  dpi = 600,
+  compression = "lzw"
+)
