@@ -55,7 +55,7 @@ meta_data <- read_xlsx(path = here("data", data_file))
 # Remove all data missing vital info
 # Adds id for effect sizes
 clean_data <- clean_names(meta_data) |> 
-  drop_na(id, outcome, correlation, std_error) |> 
+  drop_na(id, outcome, demographics, correlation, std_error) |> 
   mutate(
     es_id = row_number(),
     report_id_superior_report_e_g_parent_1_inferior_report_e_g_child_2_observation_3 = as.character(report_id_superior_report_e_g_parent_1_inferior_report_e_g_child_2_observation_3)
@@ -74,10 +74,10 @@ clean_data <- clean_names(meta_data) |>
 nested_data <- clean_data |> 
   filter(!(.data[[grouping]] %in% exclude)) |> 
   group_by(.data[[grouping]], demographics) |> 
-  filter(n() > 1) |> 
+  filter(n() > 1) |>
   ungroup() |> 
   nest_by(.data[[grouping]]) |> 
-  filter(length(unique(data[[mods]])) > 1) |> 
+  filter(length(unique(data[[mods]])) > 1) |>
   mutate(
     V = list(vcalc(vi = vi, cluster = id, nearpd = TRUE, data = data))
   )
